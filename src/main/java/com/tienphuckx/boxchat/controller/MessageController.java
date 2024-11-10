@@ -1,5 +1,6 @@
 package com.tienphuckx.boxchat.controller;
 
+import com.tienphuckx.boxchat.dto.request.SendMessageDto;
 import com.tienphuckx.boxchat.model.Message;
 import com.tienphuckx.boxchat.service.MessageService;
 import org.springframework.web.bind.annotation.*;
@@ -19,13 +20,15 @@ public class MessageController {
     }
 
     // Send a message
-    @PostMapping
-    public Message sendMessage(@RequestBody Message message) {
-        if (message.getContent() == null || message.getGroupId() == null || message.getUserId() == null) {
-            throw new IllegalArgumentException("Message content, group ID, and user ID must not be null");
-        }
-        return messageService.sendMessage(message);
-    }
+//    @PostMapping
+//    public Message sendMessage(@RequestBody SendMessageDto sendMessageDto) {
+//        if (sendMessageDto.getContent() == null
+//                || sendMessageDto.getGroupId() == null
+//                || sendMessageDto.getUserId() == null) {
+//            throw new IllegalArgumentException("Message content, group ID, and user ID must not be null");
+//        }
+//        return messageService.sendMessage(sendMessageDto);
+//    }
 
     // Get all messages in a group
     @GetMapping("/group/{groupId}")

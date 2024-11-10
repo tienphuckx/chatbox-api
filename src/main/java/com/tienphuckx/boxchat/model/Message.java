@@ -18,5 +18,5 @@ public class Message {
     private Timestamp createdAt;
     private Integer userId;
     private Integer groupId;
-    private UUID messageUuid;
+    private String messageUuid;
 }

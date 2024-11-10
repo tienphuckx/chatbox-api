@@ -1,9 +1,13 @@
 package com.tienphuckx.boxchat.service;
 
+import com.tienphuckx.boxchat.dto.request.SendMessageDto;
 import com.tienphuckx.boxchat.mapper.MessageMapper;
 import com.tienphuckx.boxchat.model.Message;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,11 +21,19 @@ public class MessageService {
         this.messageMapper = messageMapper;
     }
 
+
     // Send a message
-    public Message sendMessage(Message message) {
-        message.setMessageUuid(UUID.randomUUID()); // Generate unique UUID for the message
-        messageMapper.insertMessage(message);
-        return message; // Return the message object with generated ID
+    public Message sendMessage(SendMessageDto dto) {
+        Message msg = new Message();
+
+        msg.setMessageUuid(UUID.randomUUID().toString());
+        msg.setGroupId(dto.getGroupId());
+        msg.setUserId(dto.getUserId());
+        msg.setContent(dto.getContent());
+        msg.setMessageType("TEXT");
+
+        messageMapper.insertMessage(msg);
+        return msg;
     }
 
     // Find all messages in a group

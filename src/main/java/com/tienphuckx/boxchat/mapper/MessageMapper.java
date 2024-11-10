@@ -13,6 +13,7 @@ public interface MessageMapper {
     void insertMessage(Message message);
 
 
+
     // Find all messages in a group
     @Select("SELECT * FROM messages WHERE group_id = #{groupId} ORDER BY created_at ASC")
     List<Message> findMessagesByGroupId(Integer groupId);

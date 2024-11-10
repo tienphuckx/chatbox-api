@@ -1,4 +1,8 @@
 package com.tienphuckx.boxchat.config;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tienphuckx.boxchat.dto.request.SendMessageDto;
+import com.tienphuckx.boxchat.model.Message;
+import com.tienphuckx.boxchat.service.MessageService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -11,6 +15,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Configuration
 public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final MessageService messageService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public ChatWebSocketHandler(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -19,10 +29,21 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+    protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
+
+        // Cast buffer to Object
+        SendMessageDto msg = objectMapper.readValue(textMessage.getPayload(), SendMessageDto.class);
+
+        // Save message to DB
+        Message savedMessage = messageService.sendMessage(msg);
+
+        // Broadcast message to all sessions
         for (WebSocketSession webSocketSession : sessions.values()) {
             if (webSocketSession.isOpen()) {
-                webSocketSession.sendMessage(message);
+
+                webSocketSession.sendMessage(
+                        new TextMessage(objectMapper.writeValueAsString(savedMessage))
+                );
             }
         }
     }
