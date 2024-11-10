@@ -41,4 +41,7 @@ public interface GroupMapper {
         WHERE w.user_id = #{userId}
     """)
     List<Group> findWaitingGroupsByUserId(@Param("userId") Integer userId);
+
+
+
 }
