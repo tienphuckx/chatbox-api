@@ -1,5 +1,6 @@
 package com.tienphuckx.boxchat.mapper;
 
+import com.tienphuckx.boxchat.dto.response.WaitingMemberDto;
 import com.tienphuckx.boxchat.model.WaitingList;
 import org.apache.ibatis.annotations.*;
 
@@ -22,5 +23,13 @@ public interface WaitingListMapper {
     // Delete all entries for a user
     @Delete("DELETE FROM waiting_list WHERE user_id = #{userId}")
     void deleteAllForUser(@Param("userId") Integer userId);
+
+    @Select("""
+        SELECT u.id AS memberId, u.username AS memberName, w.message AS memberMessage
+        FROM waiting_list w
+        JOIN users u ON w.user_id = u.id
+        WHERE w.group_id = #{groupId}
+    """)
+    List<WaitingMemberDto> findWaitingMembersByGroupId(@Param("groupId") Integer groupId);
 }
 

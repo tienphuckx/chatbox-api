@@ -1,5 +1,6 @@
 package com.tienphuckx.boxchat.mapper;
 
+import com.tienphuckx.boxchat.dto.response.JoinedMemberDto;
 import com.tienphuckx.boxchat.model.Participant;
 import org.apache.ibatis.annotations.*;
 import java.util.List;
@@ -18,4 +19,14 @@ public interface ParticipantMapper {
     // Find all participants in a group
     @Select("SELECT * FROM participants WHERE group_id = #{groupId}")
     List<Participant> findParticipantsByGroupId(Integer groupId);
+
+
+    @Select("""
+        SELECT u.id AS memberId, u.username AS memberName
+        FROM participants p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.group_id = #{groupId}
+    """)
+    List<JoinedMemberDto> findJoinedMembersByGroupId(@Param("groupId") Integer groupId);
+
 }

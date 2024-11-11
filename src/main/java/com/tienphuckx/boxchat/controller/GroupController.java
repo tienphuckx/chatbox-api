@@ -3,6 +3,7 @@ package com.tienphuckx.boxchat.controller;
 import com.tienphuckx.boxchat.dto.request.JoinGroupDto;
 import com.tienphuckx.boxchat.dto.request.NewGroupDto;
 import com.tienphuckx.boxchat.dto.response.GroupResponse;
+import com.tienphuckx.boxchat.dto.response.GroupSettingResponse;
 import com.tienphuckx.boxchat.mapper.GroupMapper;
 import com.tienphuckx.boxchat.model.Group;
 import com.tienphuckx.boxchat.service.GroupService;
@@ -34,6 +35,22 @@ public class GroupController {
         this.userService = userService;
         this.participantService = participantService;
         this.waitingListService = waitingListService;
+    }
+
+    @GetMapping("/setting/{groupCode}")
+    public ResponseEntity<GroupSettingResponse> getGroupSetting(@PathVariable String groupCode) {
+        try {
+            if(groupCode == null){
+                System.out.println("Group code must not be null");
+                return ResponseEntity.status(500).build();
+            }
+            GroupSettingResponse res = groupService.getGroupSetting(groupCode);
+            return ResponseEntity.ok(res);
+
+        } catch (Exception e) {
+            System.out.println("Error while getting group setting");
+            return ResponseEntity.status(500).build();
+        }
     }
 
     @PostMapping("/add")
