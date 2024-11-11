@@ -21,4 +21,15 @@ public interface MessageMapper {
     // Find all messages sent by a user
     @Select("SELECT * FROM messages WHERE user_id = #{userId} ORDER BY created_at ASC")
     List<Message> findMessagesByUserId(Integer userId);
+
+    @Select("""
+        SELECT * 
+        FROM messages 
+        WHERE group_id = #{groupId} 
+        ORDER BY created_at DESC 
+        LIMIT #{limit} OFFSET #{offset}
+    """)
+    List<Message> findMessagesByGroupIdWithPagination(@Param("groupId") Integer groupId,
+                                                      @Param("offset") Integer offset,
+                                                      @Param("limit") Integer limit);
 }

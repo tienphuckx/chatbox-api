@@ -31,5 +31,10 @@ public interface WaitingListMapper {
         WHERE w.group_id = #{groupId}
     """)
     List<WaitingMemberDto> findWaitingMembersByGroupId(@Param("groupId") Integer groupId);
+
+
+
+    @Select("SELECT COUNT(*) FROM waiting_list WHERE group_id = #{groupId}")
+    Integer countWaitingMembersByGroupId(@Param("groupId") Integer groupId);
 }
 

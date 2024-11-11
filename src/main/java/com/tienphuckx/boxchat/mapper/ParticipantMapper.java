@@ -29,4 +29,7 @@ public interface ParticipantMapper {
     """)
     List<JoinedMemberDto> findJoinedMembersByGroupId(@Param("groupId") Integer groupId);
 
+    @Select("SELECT COUNT(*) FROM participants WHERE group_id = #{groupId}")
+    Integer countJoinedMembersByGroupId(@Param("groupId") Integer groupId);
+
 }
