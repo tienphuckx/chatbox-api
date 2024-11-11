@@ -1,10 +1,7 @@
 package com.tienphuckx.boxchat.mapper;
 
 import com.tienphuckx.boxchat.model.WaitingList;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -17,4 +14,13 @@ public interface WaitingListMapper {
     // Find waiting list entries by user ID
     @Select("SELECT * FROM waiting_list WHERE user_id = #{userId}")
     List<WaitingList> findWaitingListByUserId(@Param("userId") Integer userId);
+
+    // Delete a specific entry from the waiting list
+    @Delete("DELETE FROM waiting_list WHERE user_id = #{userId} AND group_id = #{groupId}")
+    void deleteFromWaitingList(@Param("userId") Integer userId, @Param("groupId") Integer groupId);
+
+    // Delete all entries for a user
+    @Delete("DELETE FROM waiting_list WHERE user_id = #{userId}")
+    void deleteAllForUser(@Param("userId") Integer userId);
 }
+

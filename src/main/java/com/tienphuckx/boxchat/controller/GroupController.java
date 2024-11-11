@@ -8,6 +8,7 @@ import com.tienphuckx.boxchat.model.Group;
 import com.tienphuckx.boxchat.service.GroupService;
 import com.tienphuckx.boxchat.service.ParticipantService;
 import com.tienphuckx.boxchat.service.UserService;
+import com.tienphuckx.boxchat.service.WaitingListService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +26,14 @@ public class GroupController {
     private final GroupService groupService;
     private final UserService userService;
     private final ParticipantService participantService;
+    private final WaitingListService waitingListService;
 
     @Autowired
-    public GroupController(GroupService groupService, UserService userService, ParticipantService participantService) {
+    public GroupController(GroupService groupService, UserService userService, ParticipantService participantService, WaitingListService waitingListService) {
         this.groupService = groupService;
         this.userService = userService;
         this.participantService = participantService;
+        this.waitingListService = waitingListService;
     }
 
     @PostMapping("/add")
@@ -49,7 +52,7 @@ public class GroupController {
     @PostMapping("/join")
     public ResponseEntity<?> joinGroup(@RequestBody JoinGroupDto dto) {
         try {
-            // Validate DTO (e.g., check for null values)
+
             if (dto.getGroupCode() == null || dto.getUserId() == null) {
                 return ResponseEntity.badRequest().body(Map.of(
                         "success", false,
@@ -57,7 +60,6 @@ public class GroupController {
                 ));
             }
 
-            // Find group by code
             Group gr = groupService.findGroupByCode(dto.getGroupCode());
             if (gr == null) {
                 return ResponseEntity.badRequest().body(Map.of(
@@ -66,8 +68,14 @@ public class GroupController {
                 ));
             }
 
-            // Add user to group
-            participantService.addUserToGroup(dto.getUserId(), gr.getId());
+            if(gr.getApprovalRequire()){
+                waitingListService.addToWaitingList(dto.getUserId(), gr.getId(), dto.getMessage());
+            }else{
+                participantService.addUserToGroup(dto.getUserId(), gr.getId());
+            }
+
+            // Add user to participant
+
 
             // Return success response
             return ResponseEntity.ok(Map.of(

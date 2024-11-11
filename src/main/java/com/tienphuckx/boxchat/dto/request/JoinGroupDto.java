@@ -12,4 +12,5 @@ import lombok.ToString;
 public class JoinGroupDto {
     private String groupCode;
     private Integer userId;
+    private String message;
 }

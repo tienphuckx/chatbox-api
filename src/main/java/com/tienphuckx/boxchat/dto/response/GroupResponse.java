@@ -1,5 +1,6 @@
 package com.tienphuckx.boxchat.dto.response;
 
+import com.tienphuckx.boxchat.model.Group;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -19,5 +20,6 @@ public class GroupResponse {
     private Timestamp expiredAt;
     private Integer maximumMembers;
     private String status; // "joined" or "waiting"
+    private Integer ownerId;
 
 }

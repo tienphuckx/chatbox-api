@@ -64,6 +64,7 @@ public class GroupService {
         response.setExpiredAt(group.getExpiredAt());
         response.setMaximumMembers(group.getMaximumMembers());
         response.setStatus(status);
+        response.setOwnerId(group.getUserId());
         return response;
     }
 

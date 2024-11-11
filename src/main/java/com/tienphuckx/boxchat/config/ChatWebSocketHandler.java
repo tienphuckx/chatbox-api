@@ -1,8 +1,11 @@
 package com.tienphuckx.boxchat.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tienphuckx.boxchat.dto.request.SendMessageDto;
+import com.tienphuckx.boxchat.dto.response.MessageResponse;
 import com.tienphuckx.boxchat.model.Message;
+import com.tienphuckx.boxchat.model.User;
 import com.tienphuckx.boxchat.service.MessageService;
+import com.tienphuckx.boxchat.service.UserService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -17,9 +20,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final MessageService messageService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserService userService;
 
-    public ChatWebSocketHandler(MessageService messageService) {
+    public ChatWebSocketHandler(MessageService messageService, UserService userService) {
         this.messageService = messageService;
+        this.userService = userService;
     }
 
     @Override
@@ -37,12 +42,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         // Save message to DB
         Message savedMessage = messageService.sendMessage(msg);
 
+        // get sender info to return sender username
+        User senderInfo = userService.findUserById(savedMessage.getUserId());
+        MessageResponse messageResponse = new MessageResponse(savedMessage);
+        messageResponse.setSenderName(senderInfo.getUsername());
+
         // Broadcast message to all sessions
         for (WebSocketSession webSocketSession : sessions.values()) {
             if (webSocketSession.isOpen()) {
 
                 webSocketSession.sendMessage(
-                        new TextMessage(objectMapper.writeValueAsString(savedMessage))
+                        new TextMessage(objectMapper.writeValueAsString(messageResponse))
                 );
             }
         }
