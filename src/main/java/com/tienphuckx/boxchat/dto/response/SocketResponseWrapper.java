@@ -4,11 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.net.Socket;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ApproveResponse {
-    private Integer status;
-    private String message;
-    private Integer memberId;
+public class SocketResponseWrapper<T> {
+    private String type;
+    private T data;
 }

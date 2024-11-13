@@ -32,6 +32,10 @@ public class UserService {
         return user; // Return the saved user object
     }
 
+    public User findUserByUserCode(String userCode) {
+        return userMapper.findUserByCode(userCode);
+    }
+
     // Find a user by ID
     public User findUserById(Integer id) {
         return userMapper.findUserById(id);

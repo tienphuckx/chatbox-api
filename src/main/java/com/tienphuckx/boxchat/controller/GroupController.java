@@ -1,11 +1,14 @@
 package com.tienphuckx.boxchat.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tienphuckx.boxchat.config.WebSocketSessionManager;
 import com.tienphuckx.boxchat.dto.request.ApproveRequest;
 import com.tienphuckx.boxchat.dto.request.JoinGroupDto;
 import com.tienphuckx.boxchat.dto.request.NewGroupDto;
 import com.tienphuckx.boxchat.dto.response.ApproveResponse;
 import com.tienphuckx.boxchat.dto.response.GroupResponse;
 import com.tienphuckx.boxchat.dto.response.GroupSettingResponse;
+import com.tienphuckx.boxchat.dto.response.SocketResponseWrapper;
 import com.tienphuckx.boxchat.mapper.GroupMapper;
 import com.tienphuckx.boxchat.model.Group;
 import com.tienphuckx.boxchat.model.User;
@@ -17,7 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,13 +38,16 @@ public class GroupController {
     private final UserService userService;
     private final ParticipantService participantService;
     private final WaitingListService waitingListService;
+    private final WebSocketSessionManager webSocketSessionManager;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
-    public GroupController(GroupService groupService, UserService userService, ParticipantService participantService, WaitingListService waitingListService) {
+    public GroupController(GroupService groupService, UserService userService, ParticipantService participantService, WaitingListService waitingListService, WebSocketSessionManager webSocketSessionManager) {
         this.groupService = groupService;
         this.userService = userService;
         this.participantService = participantService;
         this.waitingListService = waitingListService;
+        this.webSocketSessionManager = webSocketSessionManager;
     }
 
     @GetMapping("/setting/{groupCode}")
@@ -72,7 +81,6 @@ public class GroupController {
 
 
     @PostMapping("/approve")
-    @Transactional
     public ApproveResponse approveGroup(@RequestBody ApproveRequest approveRequest) {
 
         // Todo: validate id of owner of the group before approval
@@ -80,7 +88,35 @@ public class GroupController {
         participantService.addUserToGroup(approveRequest.getMemberId(), approveRequest.getGroupId());
         waitingListService.deleteFromWaitingList(approveRequest.getMemberId(), approveRequest.getGroupId());
 
-        return new ApproveResponse(200, "success");
+
+        // Find the member's WebSocket session from the session manager
+        WebSocketSession session = webSocketSessionManager.getMemberSession(approveRequest.getMemberId());
+        if (session != null && session.isOpen()) {
+            // Send message to the member waiting for approval
+            try {
+                ApproveResponse approveResponse = new ApproveResponse();
+                approveResponse.setStatus(200);
+                approveResponse.setMemberId(approveRequest.getMemberId());
+                approveResponse.setMessage("You have been approved to join the group!");
+
+                SocketResponseWrapper<ApproveResponse> res = new SocketResponseWrapper<>();
+                res.setData(approveResponse);
+                res.setType("WS_APPROVED");
+
+
+                // Serialize the response to JSON
+                String message = objectMapper.writeValueAsString(res);
+
+                System.out.println(message);
+
+                // Send the serialized message as a TextMessage
+                session.sendMessage(new TextMessage(message));
+            } catch (IOException e) {
+                e.printStackTrace(); // Handle the error
+            }
+        }
+
+        return new ApproveResponse(200, "success", approveRequest.getMemberId());
     }
 
     @PostMapping("/join")
