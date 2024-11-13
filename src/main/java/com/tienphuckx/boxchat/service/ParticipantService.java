@@ -34,4 +34,8 @@ public class ParticipantService {
     public List<Participant> findParticipantsByGroupId(Integer groupId) {
         return participantMapper.findParticipantsByGroupId(groupId);
     }
+
+    public void deleteUserFromGroup(Integer memberId, Integer groupId) {
+        participantMapper.deleteUserFromGroup(memberId, groupId);
+    }
 }

@@ -5,10 +5,8 @@ import com.tienphuckx.boxchat.config.WebSocketSessionManager;
 import com.tienphuckx.boxchat.dto.request.ApproveRequest;
 import com.tienphuckx.boxchat.dto.request.JoinGroupDto;
 import com.tienphuckx.boxchat.dto.request.NewGroupDto;
-import com.tienphuckx.boxchat.dto.response.ApproveResponse;
-import com.tienphuckx.boxchat.dto.response.GroupResponse;
-import com.tienphuckx.boxchat.dto.response.GroupSettingResponse;
-import com.tienphuckx.boxchat.dto.response.SocketResponseWrapper;
+import com.tienphuckx.boxchat.dto.request.RmMemberRequest;
+import com.tienphuckx.boxchat.dto.response.*;
 import com.tienphuckx.boxchat.mapper.GroupMapper;
 import com.tienphuckx.boxchat.model.Group;
 import com.tienphuckx.boxchat.model.User;
@@ -77,6 +75,62 @@ public class GroupController {
         group.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
         group.setExpiredAt(Timestamp.valueOf(LocalDateTime.now().plusSeconds(groupDto.getRemainSeconds())));
         return groupService.createGroup(group);
+    }
+
+    @PostMapping("/member/remove")
+    public ResponseWrapper<RmMemberResponse> removeMemberFromGroup(@RequestBody RmMemberRequest request) {
+        try {
+            User groupOner = userService.findUserByUserCode(request.getUserCode());
+            Group group = groupService.findGroupByCode(request.getGroupCode());
+            User removeMember = userService.findUserById(request.getMemberId());
+
+            if(groupOner == null || group == null || removeMember == null){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Bad Request! Check the parameters"
+                );
+            }
+
+            // check if groupOner is onwer of the group
+            boolean isGroupOwner = groupOner.getId().equals(group.getUserId());
+            if(!isGroupOwner){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Permission denied!"
+                );
+            }
+
+            // check if removeMember is a member in the group
+            boolean isMemberInGroup = participantService.isUserInGroup(removeMember.getId(), group.getId());
+            if (!isMemberInGroup) {
+                return new ResponseWrapper<>(
+                        404,
+                        null,
+                        "The remove member not in the the group!"
+                );
+            }
+
+            participantService.deleteUserFromGroup(removeMember.getId(), group.getId());
+
+            RmMemberResponse rmMemberResponse = new RmMemberResponse();
+            rmMemberResponse.setRemoveMemberName(removeMember.getUsername());
+
+            return new ResponseWrapper<>(
+                    200,
+                    rmMemberResponse,
+                    "Remove member successfully!"
+            );
+
+        } catch (Exception e){
+            e.printStackTrace();
+            return new ResponseWrapper<>(
+                    500,
+                    null,
+                    "Failed to remove member from the group!"
+            );
+        }
     }
 
 

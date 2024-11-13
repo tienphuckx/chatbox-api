@@ -32,4 +32,10 @@ public interface ParticipantMapper {
     @Select("SELECT COUNT(*) FROM participants WHERE group_id = #{groupId}")
     Integer countJoinedMembersByGroupId(@Param("groupId") Integer groupId);
 
-}
+    @Delete("""
+        DELETE FROM participants WHERE user_id = #{memberId} AND group_id = #{groupId}
+    """)
+    void deleteUserFromGroup(Integer memberId, Integer groupId);
+
+
+    }

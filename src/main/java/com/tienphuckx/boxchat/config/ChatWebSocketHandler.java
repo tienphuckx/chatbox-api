@@ -107,7 +107,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         res.setData(data);
 
 
-        // Broadcast message to users in the group
+        // Broadcast message for only users in the group
         for (WebSocketSession webSocketSession : sessions.values()) {
             if (webSocketSession.isOpen()) {
                 // Get the user associated with the session
