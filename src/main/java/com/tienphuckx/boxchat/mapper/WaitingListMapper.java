@@ -36,5 +36,8 @@ public interface WaitingListMapper {
 
     @Select("SELECT COUNT(*) FROM waiting_list WHERE group_id = #{groupId}")
     Integer countWaitingMembersByGroupId(@Param("groupId") Integer groupId);
+
+    @Select("SELECT COUNT(*) FROM waiting_list WHERE user_id = #{userId} AND group_id = #{groupId}")
+    boolean isUserInWaitingList(Integer userId, Integer groupId);
 }
 

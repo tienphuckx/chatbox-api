@@ -80,11 +80,11 @@ public class GroupController {
     @PostMapping("/member/remove")
     public ResponseWrapper<RmMemberResponse> removeMemberFromGroup(@RequestBody RmMemberRequest request) {
         try {
-            User groupOner = userService.findUserByUserCode(request.getUserCode());
+            User groupOwner = userService.findUserByUserCode(request.getUserCode());
             Group group = groupService.findGroupByCode(request.getGroupCode());
             User removeMember = userService.findUserById(request.getMemberId());
 
-            if(groupOner == null || group == null || removeMember == null){
+            if(groupOwner == null || group == null || removeMember == null){
                 return new ResponseWrapper<>(
                         401,
                         null,
@@ -93,7 +93,7 @@ public class GroupController {
             }
 
             // check if groupOner is onwer of the group
-            boolean isGroupOwner = groupOner.getId().equals(group.getUserId());
+            boolean isGroupOwner = groupOwner.getId().equals(group.getUserId());
             if(!isGroupOwner){
                 return new ResponseWrapper<>(
                         401,
@@ -113,6 +113,63 @@ public class GroupController {
             }
 
             participantService.deleteUserFromGroup(removeMember.getId(), group.getId());
+
+            RmMemberResponse rmMemberResponse = new RmMemberResponse();
+            rmMemberResponse.setRemoveMemberName(removeMember.getUsername());
+
+            return new ResponseWrapper<>(
+                    200,
+                    rmMemberResponse,
+                    "Remove member successfully!"
+            );
+
+        } catch (Exception e){
+            e.printStackTrace();
+            return new ResponseWrapper<>(
+                    500,
+                    null,
+                    "Failed to remove member from the group!"
+            );
+        }
+    }
+
+    @PostMapping("/member/decline")
+    public ResponseWrapper<RmMemberResponse> declineMemberFromGroup(@RequestBody RmMemberRequest request) {
+        try {
+            User groupOwner = userService.findUserByUserCode(request.getUserCode());
+            Group group = groupService.findGroupByCode(request.getGroupCode());
+            User removeMember = userService.findUserById(request.getMemberId());
+
+            if(groupOwner == null || group == null || removeMember == null){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Bad Request! Check the parameters"
+                );
+            }
+
+            // check if groupOner is onwer of the group
+            boolean isGroupOwner = groupOwner.getId().equals(group.getUserId());
+            if(!isGroupOwner){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Permission denied!"
+                );
+            }
+
+
+            boolean isMemberInWaitingList = waitingListService.isUserInWaitingList(removeMember.getId(), group.getId());
+            if(!isMemberInWaitingList){
+                return new ResponseWrapper<>(
+                        404,
+                        null,
+                        "The decline member no longer in the the waiting list!"
+                );
+            }
+
+            waitingListService.deleteFromWaitingList(removeMember.getId(), group.getId());
+
 
             RmMemberResponse rmMemberResponse = new RmMemberResponse();
             rmMemberResponse.setRemoveMemberName(removeMember.getUsername());

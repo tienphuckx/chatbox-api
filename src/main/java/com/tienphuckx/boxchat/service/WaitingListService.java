@@ -36,4 +36,8 @@ public class WaitingListService {
     public void deleteAllForUser(Integer userId) {
         waitingListMapper.deleteAllForUser(userId);
     }
+
+    public boolean isUserInWaitingList(Integer userId, Integer groupId) {
+        return waitingListMapper.isUserInWaitingList(userId, groupId);
+    }
 }
