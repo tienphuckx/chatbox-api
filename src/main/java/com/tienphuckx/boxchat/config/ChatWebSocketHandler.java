@@ -3,8 +3,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tienphuckx.boxchat.dto.request.SendMessageDto;
 import com.tienphuckx.boxchat.dto.response.MessageResponse;
 import com.tienphuckx.boxchat.dto.response.SocketResponseWrapper;
+import com.tienphuckx.boxchat.model.Group;
 import com.tienphuckx.boxchat.model.Message;
 import com.tienphuckx.boxchat.model.User;
+import com.tienphuckx.boxchat.service.GroupService;
 import com.tienphuckx.boxchat.service.MessageService;
 import com.tienphuckx.boxchat.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,10 +28,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private final MessageService messageService;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final UserService userService;
+    private final GroupService groupService;
 
-    public ChatWebSocketHandler(MessageService messageService, UserService userService) {
+    public ChatWebSocketHandler(MessageService messageService, UserService userService, GroupService groupService) {
         this.messageService = messageService;
         this.userService = userService;
+        this.groupService = groupService;
     }
 
     @Autowired
@@ -49,6 +54,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     // Add session to both WebSocketSessionManager and the local sessions map
                     webSocketSessionManager.addMemberSession(member.getId(), session);
                     sessions.put(session.getId(), session);  // Add to the sessions map for broadcasting
+
+                    // Store the user in the session attributes
+                    session.getAttributes().put("user", member);
 
                     session.sendMessage(new TextMessage("{\"type\":\"info\",\"content\":\"Connected to chat!\"}"));
                 } else {
@@ -78,15 +86,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage textMessage) throws Exception {
 
-
-
         // Cast buffer to Object
         SendMessageDto msg = objectMapper.readValue(textMessage.getPayload(), SendMessageDto.class);
+
+        // Get group by ID and list of users in that group
+        Group gr = groupService.findGroupById(msg.getGroupId());
+        List<User> userInGroup = userService.findAllUsersInGroup(gr.getId());
 
         // Save message to DB
         Message savedMessage = messageService.sendMessage(msg);
 
-        // get sender info to return sender username
+        // Get sender info to return sender username
         User senderInfo = userService.findUserById(savedMessage.getUserId());
 
         MessageResponse data = new MessageResponse(savedMessage);
@@ -96,18 +106,32 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         res.setType("WS_MSG");
         res.setData(data);
 
-        // Todo: Only broadcast for member in the group that have message
 
-        // Broadcast message to all sessions
+        // Broadcast message to users in the group
         for (WebSocketSession webSocketSession : sessions.values()) {
             if (webSocketSession.isOpen()) {
-                webSocketSession.sendMessage(
-                        new TextMessage(objectMapper.writeValueAsString(res))
-                );
+                // Get the user associated with the session
+                User userInSession = getUserFromSession(webSocketSession);
+
+                // Check if the user is in the group
+                if (userInGroup.stream().anyMatch(user -> user.getId().equals(userInSession.getId()))) {
+                    // Send message to this session
+                    webSocketSession.sendMessage(
+                            new TextMessage(objectMapper.writeValueAsString(res))
+                    );
+                }
             }
         }
 
     }
+
+    // Method to get user from WebSocket session
+    public User getUserFromSession(WebSocketSession session) {
+        // Retrieve the 'user' attribute that was stored in afterConnectionEstablished
+        return (User) session.getAttributes().get("user");
+    }
+
+
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {

@@ -22,4 +22,10 @@ public interface UserMapper {
 
     @Select("SELECT * FROM users WHERE user_code = #{userCode}")
     User findUserByCode(String userCode);
+
+    @Select("SELECT u.id, u.username FROM users u " +
+            "LEFT JOIN participants p ON u.id = p.user_id " +
+            "WHERE p.group_id = #{groupId}")
+    List<User> findAllUsersInGroup(@Param("groupId") Integer groupId);
+
 }

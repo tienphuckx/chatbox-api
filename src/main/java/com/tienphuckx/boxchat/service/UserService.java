@@ -5,6 +5,8 @@ import com.tienphuckx.boxchat.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -44,5 +46,10 @@ public class UserService {
     // Find a user by username
     public User findUserByUsername(String username) {
         return userMapper.findUserByUsername(username);
+    }
+
+
+    public List<User> findAllUsersInGroup(Integer groupId) {
+        return userMapper.findAllUsersInGroup(groupId);
     }
 }
