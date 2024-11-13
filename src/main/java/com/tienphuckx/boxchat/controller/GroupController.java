@@ -1,16 +1,20 @@
 package com.tienphuckx.boxchat.controller;
 
+import com.tienphuckx.boxchat.dto.request.ApproveRequest;
 import com.tienphuckx.boxchat.dto.request.JoinGroupDto;
 import com.tienphuckx.boxchat.dto.request.NewGroupDto;
+import com.tienphuckx.boxchat.dto.response.ApproveResponse;
 import com.tienphuckx.boxchat.dto.response.GroupResponse;
 import com.tienphuckx.boxchat.dto.response.GroupSettingResponse;
 import com.tienphuckx.boxchat.mapper.GroupMapper;
 import com.tienphuckx.boxchat.model.Group;
+import com.tienphuckx.boxchat.model.User;
 import com.tienphuckx.boxchat.service.GroupService;
 import com.tienphuckx.boxchat.service.ParticipantService;
 import com.tienphuckx.boxchat.service.UserService;
 import com.tienphuckx.boxchat.service.WaitingListService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -64,6 +68,19 @@ public class GroupController {
         group.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
         group.setExpiredAt(Timestamp.valueOf(LocalDateTime.now().plusSeconds(groupDto.getRemainSeconds())));
         return groupService.createGroup(group);
+    }
+
+
+    @PostMapping("/approve")
+    @Transactional
+    public ApproveResponse approveGroup(@RequestBody ApproveRequest approveRequest) {
+
+        // Todo: validate id of owner of the group before approval
+
+        participantService.addUserToGroup(approveRequest.getMemberId(), approveRequest.getGroupId());
+        waitingListService.deleteFromWaitingList(approveRequest.getMemberId(), approveRequest.getGroupId());
+
+        return new ApproveResponse(200, "success");
     }
 
     @PostMapping("/join")
