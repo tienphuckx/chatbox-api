@@ -170,6 +170,19 @@ public class GroupController {
 
             waitingListService.deleteFromWaitingList(removeMember.getId(), group.getId());
 
+            //WS: update for waiting member
+            //get socket session of the waiting member for response
+            WebSocketSession socketSessionOfWaitingMember = webSocketSessionManager.getMemberSession(removeMember.getId());
+            if(socketSessionOfWaitingMember != null && socketSessionOfWaitingMember.isOpen()){
+                SocketResponseWrapper<DeclineWaitingMemberResponse> res = new SocketResponseWrapper<>();
+                DeclineWaitingMemberResponse declineWaitingMemberResponse = new DeclineWaitingMemberResponse();
+                declineWaitingMemberResponse.setMemberId(removeMember.getId());
+                res.setType("WS_DECLINE");
+                res.setData(declineWaitingMemberResponse);
+                String msg = objectMapper.writeValueAsString(res);
+                socketSessionOfWaitingMember.sendMessage(new TextMessage(msg));
+            }
+
 
             RmMemberResponse rmMemberResponse = new RmMemberResponse();
             rmMemberResponse.setRemoveMemberName(removeMember.getUsername());
