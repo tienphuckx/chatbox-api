@@ -130,4 +130,8 @@ public class GroupService {
 
         return response;
     }
+
+    public void deleteGroup(Integer id) {
+        groupMapper.deleteGroup(id);
+    }
 }

@@ -43,5 +43,6 @@ public interface GroupMapper {
     List<Group> findWaitingGroupsByUserId(@Param("userId") Integer userId);
 
 
-
+    @Delete("DELETE FROM groups WHERE id = #{id}")
+    void deleteGroup(Integer id);
 }

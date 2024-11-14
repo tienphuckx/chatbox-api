@@ -32,4 +32,7 @@ public interface MessageMapper {
     List<Message> findMessagesByGroupIdWithPagination(@Param("groupId") Integer groupId,
                                                       @Param("offset") Integer offset,
                                                       @Param("limit") Integer limit);
+
+    @Delete("DELETE FROM messages WHERE group_id = #{id}")
+    void deleteAllMessageOfGroup(Integer id);
 }

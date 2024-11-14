@@ -7,10 +7,7 @@ import com.tienphuckx.boxchat.dto.response.*;
 import com.tienphuckx.boxchat.mapper.GroupMapper;
 import com.tienphuckx.boxchat.model.Group;
 import com.tienphuckx.boxchat.model.User;
-import com.tienphuckx.boxchat.service.GroupService;
-import com.tienphuckx.boxchat.service.ParticipantService;
-import com.tienphuckx.boxchat.service.UserService;
-import com.tienphuckx.boxchat.service.WaitingListService;
+import com.tienphuckx.boxchat.service.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -35,14 +32,16 @@ public class GroupController {
     private final WaitingListService waitingListService;
     private final WebSocketSessionManager webSocketSessionManager;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final MessageService messageService;
 
     @Autowired
-    public GroupController(GroupService groupService, UserService userService, ParticipantService participantService, WaitingListService waitingListService, WebSocketSessionManager webSocketSessionManager) {
+    public GroupController(GroupService groupService, UserService userService, ParticipantService participantService, WaitingListService waitingListService, WebSocketSessionManager webSocketSessionManager, MessageService messageService) {
         this.groupService = groupService;
         this.userService = userService;
         this.participantService = participantService;
         this.waitingListService = waitingListService;
         this.webSocketSessionManager = webSocketSessionManager;
+        this.messageService = messageService;
     }
 
     @GetMapping("/setting/{groupCode}")
@@ -126,6 +125,77 @@ public class GroupController {
                     200,
                     null,
                     "Fail during leave group!"
+            );
+        }
+    }
+
+    @PostMapping("/delete/group")
+    public ResponseWrapper<DelGroupResponse> deleteGroup(@RequestBody DelGroupRequest request) {
+        try {
+            User groupOwner = userService.findUserByUserCode(request.getUserCode());
+            Group group = groupService.findGroupByCode(request.getGroupCode());
+
+            if(groupOwner == null || group == null){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Bad Request! Check the parameters"
+                );
+            }
+
+            // check if groupOner is onwer of the group
+            boolean isGroupOwner = groupOwner.getId().equals(group.getUserId());
+            if(!isGroupOwner){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Permission denied!"
+                );
+            }
+
+            List<User> usersInGroup = userService.findAllUsersInGroup(group.getId());
+
+            waitingListService.deleteAllWaitingMemberOfGroup(group.getId());
+            participantService.deleteAllUserFromGroup(group.getId());
+            messageService.deleteAllMessageOfGroup(group.getId());
+            groupService.deleteGroup(group.getId());
+
+
+            for (User u : usersInGroup) {
+                WebSocketSession session = webSocketSessionManager.getMemberSession(u.getId());
+                if(session != null && session.isOpen()){
+                    WsDelGroupResponse response = new WsDelGroupResponse();
+                    response.setUserId(u.getId());
+                    response.setGroupId(group.getId());
+
+                    SocketResponseWrapper<WsDelGroupResponse> wrapper = new SocketResponseWrapper<>();
+                    wrapper.setType("WS_DEL_GR");
+                    wrapper.setData(response);
+
+                    String json = objectMapper.writeValueAsString(wrapper);
+                    session.sendMessage(new TextMessage(json));
+                }
+            }
+
+
+
+
+            DelGroupResponse response = new DelGroupResponse();
+            response.setGroupId(group.getId());
+            response.setUserId(groupOwner.getId());
+
+            return new ResponseWrapper<>(
+                    200,
+                    response,
+                    "Delete group successfully!"
+            );
+
+
+        } catch (Exception e) {
+            return new ResponseWrapper<>(
+                    500,
+                    null,
+                    "Failed to delete group!"
             );
         }
     }

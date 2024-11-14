@@ -105,4 +105,8 @@ public class MessageService {
     public List<Message> findMessagesByUserId(Integer userId) {
         return messageMapper.findMessagesByUserId(userId);
     }
+
+    public void deleteAllMessageOfGroup(Integer id) {
+        messageMapper.deleteAllMessageOfGroup(id);
+    }
 }

@@ -37,5 +37,6 @@ public interface ParticipantMapper {
     """)
     void deleteUserFromGroup(Integer memberId, Integer groupId);
 
-
-    }
+    @Delete("DELETE FROM participants WHERE group_id = #{id}")
+    void deleteAllUserFromGroup(Integer id);
+}

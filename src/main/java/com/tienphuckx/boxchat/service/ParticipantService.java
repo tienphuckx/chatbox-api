@@ -38,4 +38,8 @@ public class ParticipantService {
     public void deleteUserFromGroup(Integer memberId, Integer groupId) {
         participantMapper.deleteUserFromGroup(memberId, groupId);
     }
+
+    public void deleteAllUserFromGroup(Integer id) {
+        participantMapper.deleteAllUserFromGroup(id);
+    }
 }

@@ -40,4 +40,8 @@ public class WaitingListService {
     public boolean isUserInWaitingList(Integer userId, Integer groupId) {
         return waitingListMapper.isUserInWaitingList(userId, groupId);
     }
+
+    public void deleteAllWaitingMemberOfGroup(Integer id) {
+        waitingListMapper.deleteAllWaitingMemberOfGroup(id);
+    }
 }

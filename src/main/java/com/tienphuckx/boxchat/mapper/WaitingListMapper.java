@@ -39,5 +39,8 @@ public interface WaitingListMapper {
 
     @Select("SELECT COUNT(*) FROM waiting_list WHERE user_id = #{userId} AND group_id = #{groupId}")
     boolean isUserInWaitingList(Integer userId, Integer groupId);
+
+    @Delete("DELETE FROM waiting_list WHERE group_id = #{id} ")
+    void deleteAllWaitingMemberOfGroup(Integer id);
 }
 
