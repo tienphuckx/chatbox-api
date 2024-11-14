@@ -8,5 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RmMemberResponse {
+    private Integer removeMemberId;
     private String removeMemberName;
 }

@@ -114,6 +114,17 @@ public class GroupController {
 
             participantService.deleteUserFromGroup(removeMember.getId(), group.getId());
 
+            WebSocketSession ses = webSocketSessionManager.getMemberSession(removeMember.getId());
+            if(ses != null && ses.isOpen()){
+                SocketResponseWrapper<RmMemberResponse> wrapper = new SocketResponseWrapper<>();
+                RmMemberResponse rmMemberResponse = new RmMemberResponse();
+                rmMemberResponse.setRemoveMemberId(removeMember.getId());
+                wrapper.setType("WS_RM_MEMBER");
+                wrapper.setData(rmMemberResponse);
+                String msg = objectMapper.writeValueAsString(wrapper);
+                ses.sendMessage(new TextMessage(msg));
+            }
+
             RmMemberResponse rmMemberResponse = new RmMemberResponse();
             rmMemberResponse.setRemoveMemberName(removeMember.getUsername());
 
