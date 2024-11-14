@@ -2,10 +2,7 @@ package com.tienphuckx.boxchat.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tienphuckx.boxchat.config.WebSocketSessionManager;
-import com.tienphuckx.boxchat.dto.request.ApproveRequest;
-import com.tienphuckx.boxchat.dto.request.JoinGroupDto;
-import com.tienphuckx.boxchat.dto.request.NewGroupDto;
-import com.tienphuckx.boxchat.dto.request.RmMemberRequest;
+import com.tienphuckx.boxchat.dto.request.*;
 import com.tienphuckx.boxchat.dto.response.*;
 import com.tienphuckx.boxchat.mapper.GroupMapper;
 import com.tienphuckx.boxchat.model.Group;
@@ -75,6 +72,62 @@ public class GroupController {
         group.setCreatedAt(Timestamp.valueOf(LocalDateTime.now()));
         group.setExpiredAt(Timestamp.valueOf(LocalDateTime.now().plusSeconds(groupDto.getRemainSeconds())));
         return groupService.createGroup(group);
+    }
+
+    @PostMapping("/member/leave")
+    public ResponseWrapper<LeaveGroupResponse> leaveGroup(@RequestBody LeaveGroupRequest request) {
+        try{
+            User member = userService.findUserByUserCode(request.getUserCode());
+            Group group = groupService.findGroupByCode(request.getGroupCode());
+            if(member == null || group == null){
+                return new ResponseWrapper<>(
+                        401,
+                        null,
+                        "Bad Request! Check the parameters"
+                );
+            }
+            boolean isMemberInGroup = participantService.isUserInGroup(member.getId(), group.getId());
+            if (!isMemberInGroup) {
+                return new ResponseWrapper<>(
+                        404,
+                        null,
+                        "The member not in the the group!"
+                );
+            }
+            participantService.deleteUserFromGroup(member.getId(), group.getId());
+            WebSocketSession session = webSocketSessionManager.getMemberSession(member.getId());
+            if(session != null && session.isOpen()){
+
+                LeaveGroupResponse response = new LeaveGroupResponse();
+                response.setMemberId(member.getId());
+                response.setGroupId(group.getId());
+
+                SocketResponseWrapper<LeaveGroupResponse> wrapper = new SocketResponseWrapper<>();
+                wrapper.setType("WS_LEAVE_GR");
+                wrapper.setData(response);
+
+                String json = objectMapper.writeValueAsString(wrapper);
+                session.sendMessage(new TextMessage(json));
+            }
+
+            LeaveGroupResponse response = new LeaveGroupResponse();
+            response.setMemberId(member.getId());
+            response.setGroupId(group.getId());
+
+            return new ResponseWrapper<>(
+                    200,
+                    response,
+                    "Leave group successfully!"
+            );
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return new ResponseWrapper<>(
+                    200,
+                    null,
+                    "Fail during leave group!"
+            );
+        }
     }
 
     @PostMapping("/member/remove")
