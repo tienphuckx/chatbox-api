@@ -18,6 +18,7 @@ public class MessageResponse {
     private Integer groupId;
     private String messageUuid;
     private String senderName;
+    private boolean seen;
 
     public MessageResponse(Message savedMessage) {
         this.id = savedMessage.getId();
@@ -27,5 +28,6 @@ public class MessageResponse {
         this.userId = savedMessage.getUserId();
         this.groupId = savedMessage.getGroupId();
         this.messageUuid = savedMessage.getMessageUuid();
+        this.seen = savedMessage.isSeen();
     }
 }

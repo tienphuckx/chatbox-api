@@ -35,4 +35,10 @@ public interface MessageMapper {
 
     @Delete("DELETE FROM messages WHERE group_id = #{id}")
     void deleteAllMessageOfGroup(Integer id);
+
+    @Select("SELECT * FROM messages WHERE id = #{messageId}")
+    Message findMessagesById(Integer messageId);
+
+    @Update("UPDATE messages SET seen = true")
+    void markSeenMessage(Integer messageId);
 }

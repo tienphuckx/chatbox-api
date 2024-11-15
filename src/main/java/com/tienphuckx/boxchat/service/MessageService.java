@@ -109,4 +109,12 @@ public class MessageService {
     public void deleteAllMessageOfGroup(Integer id) {
         messageMapper.deleteAllMessageOfGroup(id);
     }
+
+    public Message findMessagesById(Integer messageId) {
+        return messageMapper.findMessagesById(messageId);
+    }
+
+    public void markSeenMessage(Integer messageId) {
+        messageMapper.markSeenMessage(messageId);
+    }
 }

@@ -18,5 +18,6 @@ public class GroupDetailResponse {
     private String ownerName;
     private Integer limitMessage;
     private Integer pageMessage;
+    private boolean seen;
     private List<MessageResponse> messages;
 }

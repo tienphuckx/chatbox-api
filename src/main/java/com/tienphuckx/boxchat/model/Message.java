@@ -19,4 +19,5 @@ public class Message {
     private Integer userId;
     private Integer groupId;
     private String messageUuid;
+    private boolean seen;
 }
